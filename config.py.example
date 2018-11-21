@@ -1,0 +1,2 @@
+token = # Set your token here as str
+guild = # Guild ID as int
