@@ -6,6 +6,8 @@ import os
 
 class Vote:
     vote_list = {}
+    cleanup_msgs_after = 30
+
     def __init__(self, bot):
         self.bot = bot
         if os.path.isfile("votes.json"):
@@ -18,17 +20,18 @@ class Vote:
         if choice == "cancel":
             popped = self.vote_list.pop(ctx.author.id, None) # default param means nothing goes wrong if someone cancels again
             if popped is not None:
-                await ctx.author.send("Your vote has been cancelled!")
+                await ctx.send("Your vote has been cancelled!", delete_after=self.cleanup_msgs_after)
         else:
             self.vote_list[ctx.author.id] = choice
-            await ctx.author.send(f"Your vote for {choice} has been succesfully registered!")
+            await ctx.send(f"Your vote for {choice} has been succesfully registered!", delete_after=self.cleanup_msgs_after)
         with open("votes.json", "w") as votefile:
             json.dump(self.vote_list, votefile)
         try:
             await ctx.message.delete()
         except:
-            pass # whatevs, user mustve voted through DMs
+            pass
 
+    @commands.guild_only()
     @commands.command()
     async def vote(self, ctx, choice):
         await self.queue.put((choice, ctx)) # tuple -> immutable plus easy get
