@@ -41,7 +41,7 @@ class Vote:
         else:
             self.vote_list[ctx.author.id] = choice
             await ctx.send(f"Your vote for {choice} has been succesfully registered!")
-        with open("votes.json", "w") as votefile:
+        with open("{}.json".format(self.pollcfg["name"]), "w") as votefile:
             json.dump(self.vote_list, votefile)
 
     @commands.guild_only()
