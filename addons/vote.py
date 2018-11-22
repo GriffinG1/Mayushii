@@ -44,13 +44,13 @@ class Vote:
 
     @commands.guild_only()
     @commands.command()
-    async def poll(self, ctx, command, link = "", name = "", options=""):
+    async def poll(self, ctx, command, link="", name="",*,options=""):
         if command == "create":
             if not self.ongoing:
                 vote_options = []
                 self.pollcfg["name"] = name
                 self.pollcfg["link"] = link
-                for op in options.split("|"):
+                for op in options.split(" | "):
                     vote_options.append(op)
                 self.pollcfg["options"] = vote_options
                 with open("poll.json", "w") as pollfile:
