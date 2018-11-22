@@ -16,7 +16,7 @@ class Vote:
                 self.pollcfg = json.load(pollfile)
                 if len(self.pollcfg):
                     self.poll_ongoing = True
-                    vote_name = self.pollcfg["name"] + "_votes.json"
+                    vote_name = "{}_votes.json".format(self.pollcfg["name"])
                     if os.path.isfile(vote_name):
                         with open(vote_name, "r") as votefile:
                             self.vote_list = json.load(votefile)
@@ -59,7 +59,7 @@ class Vote:
                 self.pollcfg["options"] = vote_options
                 with open("poll.json", "w") as pollfile:
                     json.dump(self.pollcfg, pollfile)
-                with open(name+"_votes.json","w") as votefile:
+                with open(f"{name}_votes.json","w") as votefile:
                     json.dump(self.vote_list, votefile)
                 self.poll_ongoing = True
                 await ctx.send("Poll successfully created!")
@@ -69,11 +69,10 @@ class Vote:
         if command == "close" or command == "end":
             if self.poll_ongoing:
                 # prob add evi final tally before finishing poll
-                if not os.path.isdir("Polls/"):
-                    os.mkdir("Polls")
-                with open("Polls/"+ self.pollcfg["name"]+".json", "w") as pollbackup:
+                os.makedirs("Polls", exist_ok=True)
+                with open("Polls/{}.json".format(self.pollcfg["name"]), "w") as pollbackup:
                     json.dump(self.pollcfg, pollbackup)
-                with open("Polls/"+ self.pollcfg["name"]+"_votes.json", "w") as votesbackup:
+                with open("Polls/{}_votes.json".format(self.pollcfg["name"]), "w") as votesbackup:
                     json.dump(self.vote_list, votesbackup)
                 self.pollcfg = {}
                 self.vote_list = {}
@@ -98,7 +97,7 @@ class Vote:
     @commands.check(is_poll_ongoing)
     async def tally(self, ctx):
         embed = discord.Embed(title="Current tally of votes")
-        votes = dict.fromkeys(self.pollcfg["options"],0)
+        votes = dict.fromkeys(self.pollcfg["options"], 0)
         msg = ""
         for vote in self.vote_list.values():
             if vote in votes:
