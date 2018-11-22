@@ -7,7 +7,7 @@ import os
 class Vote:
     pollcfg = {}
     vote_list = {}
-    ongoing = False
+    poll_ongoing = False
     cleanup_msgs_after = 30
 
     def __init__(self, bot):
@@ -16,7 +16,7 @@ class Vote:
             with open("poll.json", "r") as pollfile:
                 self.pollcfg = json.load(pollfile)
                 if len(self.pollcfg):
-                    self.ongoing = True
+                    self.poll_ongoing = True
                     vote_name = self.pollcfg["name"] + "_votes.json"
                     if os.path.isfile(vote_name):
                         with open(vote_name, "r") as votefile:
@@ -25,44 +25,44 @@ class Vote:
             with open("poll.json", "w") as pollfile:
                 json.dump(self.pollcfg, pollfile)
         self.queue = asyncio.Queue()
+        
+    async def is_poll_ongoing(self, ctx):
+        return self.poll_ongoing
 
     async def process_vote(self):
         choice, ctx = await self.queue.get()
         if choice == "cancel":
             popped = self.vote_list.pop(ctx.author.id, None) # default param means nothing goes wrong if someone cancels again
             if popped is not None:
-                await ctx.send("Your vote has been cancelled!", delete_after=self.cleanup_msgs_after)
+                await ctx.send("Your vote has been cancelled!")
         else:
             self.vote_list[ctx.author.id] = choice
-            await ctx.send(f"Your vote for {choice} has been succesfully registered!", delete_after=self.cleanup_msgs_after)
+            await ctx.send(f"Your vote for {choice} has been succesfully registered!")
         with open("votes.json", "w") as votefile:
             json.dump(self.vote_list, votefile)
-        try:
-            await ctx.message.delete()
-        except:
-            pass
 
     @commands.guild_only()
     @commands.command()
-    async def poll(self, ctx, command, link="", name="",*,options=""):
-        if command == "create":
-            if not self.ongoing:
+    async def poll(self, ctx, command, link="", name="", *, options=""):
+        if command == "create" or command == "start":
+            if not self.poll_ongoing:
                 vote_options = []
                 self.pollcfg["name"] = name
                 self.pollcfg["link"] = link
-                for op in options.split(" | "):
-                    vote_options.append(op)
+                for option in options.split(" | "):
+                    vote_options.append(option)
                 self.pollcfg["options"] = vote_options
                 with open("poll.json", "w") as pollfile:
                     json.dump(self.pollcfg, pollfile)
                 with open(name+"_votes.json","w") as votefile:
                     json.dump(self.vote_list, votefile)
-                self.ongoing = True
+                self.poll_ongoing = True
                 await ctx.send("Poll successfully created!", delete_after=self.cleanup_msgs_after)
             else:
                 await ctx.send("There is poll ongoing already!", delete_after=self.cleanup_msgs_after)
-        if command == "close":
-            if self.ongoing:
+                
+        if command == "close" or command == "end":
+            if self.poll_ongoing:
                 # prob add evi final tally before finishing poll
                 if not os.path.isdir("Polls/"):
                     os.mkdir("Polls")
@@ -74,18 +74,20 @@ class Vote:
                 self.vote_list = {}
                 with open("poll.json", "w") as pollfile:
                     json.dump(self.pollcfg, pollfile)
-                self.ongoing = False
+                self.poll_ongoing = False
                 await ctx.send("Poll successfully closed!", delete_after=self.cleanup_msgs_after)
             else:
                 await ctx.send("There is no ongoing poll!", delete_after=self.cleanup_msgs_after)
 
     @commands.guild_only()
+    @commands.check(is_poll_ongoing)
     @commands.command()
     async def vote(self, ctx, choice):
         await self.queue.put((choice, ctx)) # tuple -> immutable plus easy get
         await self.process_vote()
 
     @commands.guild_only()
+    @commands.check(is_poll_ongoing)
     @commands.command()
     async def tally(self, ctx):
         votes = dict.fromkeys(self.pollcfg["options"],0)
