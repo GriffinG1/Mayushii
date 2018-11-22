@@ -26,7 +26,7 @@ class Vote:
                 json.dump(self.pollcfg, pollfile)
         self.queue = asyncio.Queue()
         
-    async def is_poll_ongoing(self, ctx):
+    async def is_poll_ongoing(self):
         return self.poll_ongoing
 
     async def process_vote(self):
@@ -46,6 +46,8 @@ class Vote:
     async def poll(self, ctx, command, link="", name="", *, options=""):
         if command == "create" or command == "start":
             if not self.poll_ongoing:
+                if not link or not name or not options:
+                    return await ctx.send(f"You didn't provide an argument. You should fix that. Inputted: link-`{link}`, name-`{name}`, options-`{options}`.")
                 vote_options = []
                 self.pollcfg["name"] = name
                 self.pollcfg["link"] = link

@@ -31,5 +31,6 @@ async def reload(ctx):
             await ctx.send('Could not reload module ' + module)
             print('Could not load module ' + module)
             print(e)
+        await ctx.send("Reloading of modules finished!")
 
 bot.run(config.token)
