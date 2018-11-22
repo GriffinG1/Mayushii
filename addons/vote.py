@@ -8,7 +8,6 @@ class Vote:
     pollcfg = {}
     vote_list = {}
     poll_ongoing = False
-    cleanup_msgs_after = 30
 
     def __init__(self, bot):
         self.bot = bot
@@ -26,8 +25,12 @@ class Vote:
                 json.dump(self.pollcfg, pollfile)
         self.queue = asyncio.Queue()
         
-    async def is_poll_ongoing(self):
-        return self.poll_ongoing
+    async def is_poll_ongoing(ctx):
+        if ctx.cog.poll_ongoing:
+            return True
+        else:
+            await ctx.send("There's no poll running!")
+            return False
 
     async def process_vote(self):
         choice, ctx = await self.queue.get()
@@ -47,7 +50,7 @@ class Vote:
         if command == "create" or command == "start":
             if not self.poll_ongoing:
                 if not link or not name or not options:
-                    return await ctx.send(f"You didn't provide an argument. You should fix that. Inputted: link-`{link}`, name-`{name}`, options-`{options}`.")
+                    return await ctx.send(f"You didn't provide an argument. You should fix that. Inputted: link-{link}, name-{name}, options-{options}.")
                 vote_options = []
                 self.pollcfg["name"] = name
                 self.pollcfg["link"] = link
@@ -59,9 +62,9 @@ class Vote:
                 with open(name+"_votes.json","w") as votefile:
                     json.dump(self.vote_list, votefile)
                 self.poll_ongoing = True
-                await ctx.send("Poll successfully created!", delete_after=self.cleanup_msgs_after)
+                await ctx.send("Poll successfully created!")
             else:
-                await ctx.send("There is poll ongoing already!", delete_after=self.cleanup_msgs_after)
+                await ctx.send("There is poll ongoing already!")
                 
         if command == "close" or command == "end":
             if self.poll_ongoing:
@@ -77,33 +80,42 @@ class Vote:
                 with open("poll.json", "w") as pollfile:
                     json.dump(self.pollcfg, pollfile)
                 self.poll_ongoing = False
-                await ctx.send("Poll successfully closed!", delete_after=self.cleanup_msgs_after)
+                await ctx.send("Poll successfully closed!")
             else:
-                await ctx.send("There is no ongoing poll!", delete_after=self.cleanup_msgs_after)
+                await ctx.send("There is no ongoing poll!")
 
     @commands.guild_only()
-    @commands.check(is_poll_ongoing)
     @commands.command()
-    async def vote(self, ctx, choice):
+    @commands.check(is_poll_ongoing)
+    async def vote(self, ctx, choice=""):
+        if not choice:
+            return await ctx.send("You forgot to make a choice! Use `$pollinfo` to find all choices, or use `$vote cancel` to clear your vote.")
         await self.queue.put((choice, ctx)) # tuple -> immutable plus easy get
         await self.process_vote()
 
     @commands.guild_only()
-    @commands.check(is_poll_ongoing)
     @commands.command()
+    @commands.check(is_poll_ongoing)
     async def tally(self, ctx):
+        embed = discord.Embed(title="Current tally of votes")
         votes = dict.fromkeys(self.pollcfg["options"],0)
         msg = ""
         for vote in self.vote_list.values():
             if vote in votes:
                 votes[vote] += 1
-        for k in votes.items():
-            print(votes.items())
-            msg += "{} = {}\n".format(k[0],k[1])
-            print(msg)
-        await ctx.send("Current Tally:\n"+msg, delete_after=self.cleanup_msgs_after)
-
-
+        for v in votes.items():
+            embed.add_field(name=f"{v[0]}", value=f"{v[1]}")
+        await ctx.send(embed=embed)
+    
+    @commands.guild_only()
+    @commands.command()
+    @commands.check(is_poll_ongoing)
+    async def pollinfo(self, ctx):
+        embed = discord.Embed(title="Current poll")
+        embed.add_field(name="Poll name", value=self.pollcfg["name"])
+        embed.add_field(name="Link to gallery", value=self.pollcfg["link"])
+        embed.add_field(name="Options", value=self.pollcfg["options"])
+        await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(Vote(bot))
