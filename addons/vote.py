@@ -64,6 +64,8 @@ class Vote:
         if command == "close":
             if self.ongoing:
                 # prob add evi final tally before finishing poll
+                if not os.path.isdir("Polls/"):
+                    os.mkdir("Polls")
                 with open("Polls/"+ self.pollcfg["name"]+".json", "w") as pollbackup:
                     json.dump(self.pollcfg, pollbackup)
                 with open("Polls/"+ self.pollcfg["name"]+"_votes.json", "w") as votesbackup:
