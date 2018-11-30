@@ -44,6 +44,7 @@ class Vote:
             await ctx.send(f"Your vote for {choice} has been succesfully registered!")
         with open("{}.json".format(self.pollcfg["name"]), "w") as votefile:
             json.dump(self.vote_list, votefile)
+        self.queue.task_done()
 
     @commands.guild_only()
     @commands.group()
@@ -119,6 +120,7 @@ class Vote:
     @commands.command()
     @commands.check(is_poll_ongoing)
     async def tally(self, ctx):
+        await self.queue.join()
         embed = discord.Embed(title="Current tally of votes")
         votes = dict.fromkeys(self.pollcfg["options"], 0)
         msg = ""
