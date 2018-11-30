@@ -1,6 +1,6 @@
 from discord.ext import commands
 import config
-from addons.vote import *
+from addons.vote import PollException
 
 """A simple bot framework. Based on https://gist.github.com/noirscape/cc8e65c1c42f26af0a9b3780e161817d"""
 

@@ -63,9 +63,9 @@ class Vote:
                 f"You didn't provide an argument. You should fix that.")
         elif not link.startswith("https://"):
             return await ctx.send(f"Your inputted link, `{link}`, is not a valid link.")
+        vote_options = []
         for option in options.split(" | "):
             vote_options.append(option)
-        vote_options = []
         if len(vote_options) < 2:
             return await ctx.send("You can't have a poll with only one option.")
         self.pollcfg["name"] = name
@@ -123,7 +123,6 @@ class Vote:
         await self.queue.join()
         embed = discord.Embed(title="Current tally of votes")
         votes = dict.fromkeys(self.pollcfg["options"], 0)
-        msg = ""
         for vote in self.vote_list.values():
             if vote in votes:
                 votes[vote] += 1
