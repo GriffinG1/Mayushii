@@ -52,13 +52,14 @@ class Vote:
         self.queue.task_done()
 
     @commands.guild_only()
+    @commands.has_permissions(change_nickname=True)
     @commands.group()
     async def poll(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send("I don't know what you want me to do. If you would like to create a poll, please do `$help poll create`. If you would like to close an ongoing poll, please do `$poll close`.")
 
+    @commands.has_permissions(manage_guild=True)
     @poll.command(alias='start')
-    # prob add evi final tally before finishing poll
     async def create(self, ctx, link, name, *, options):
         """To create a poll, you must provide the link to the imgur gallery, the name for the current poll, and a list of available options split by vertical bars. Ex:\n$poll create https://imgur.com/testing testingpoll2018 A | B | C | D"""
         if self.poll_ongoing:
@@ -85,6 +86,7 @@ class Vote:
         self.poll_ongoing = True
         await ctx.send("Poll successfully created!")
 
+    @commands.has_permissions(manage_guild=True)
     @commands.check(is_poll_ongoing)
     @poll.command(alias='end')
     async def close(self, ctx):
@@ -111,6 +113,7 @@ class Vote:
 
         await ctx.send("Poll successfully closed!")
 
+    @commands.has_permissions(change_nickname=True)
     @poll.command()
     @commands.check(is_poll_ongoing)
     @commands.check(is_poll_channel)
@@ -130,6 +133,7 @@ class Vote:
         await self.process_vote()
 
     @commands.guild_only()
+    @commands.has_permissions(change_nickname=True)
     @commands.command()
     @commands.check(is_poll_ongoing)
     @commands.check(is_poll_channel)

@@ -59,17 +59,5 @@ async def about(ctx):
     embed.description = "This is a bot written in Python 3.7 and discord.py 1.0.0 for use in votes on Nintendo Homebrew. Source can be found [here](https://github.com/GriffinG1/Mayushii)."
     embed.set_thumbnail(url="https://i.catgirlsin.space/52/62b643b128796ca5de11d1a4a9a8d3438caca9.png")
     await ctx.send(embed=embed)
-    
-@bot.command()
-async def reload(ctx):
-    for module in modules:
-        try:
-            bot.unload_extension(module)
-            bot.load_extension(module)
-        except Exception as e:
-            await ctx.send("Could not reload module " + module)
-            print("Could not load module " + module)
-            print(e)
-        await ctx.send("Reloading of modules finished!")
 
 bot.run(config.token)
