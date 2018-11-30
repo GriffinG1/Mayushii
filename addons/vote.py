@@ -4,6 +4,7 @@ from discord.ext import commands
 import asyncio
 import os
 import shutil
+from config import channel
 
 class Vote:
     pollcfg = {}
@@ -25,11 +26,15 @@ class Vote:
 
     async def is_poll_ongoing(ctx):
         if ctx.cog.poll_ongoing:
-            print("h")
             return True
         else:
-            print("f")
             raise PollException("This thing is a pain")
+            
+    async def is_poll_channel(ctx):
+        if ctx.message.channel.id == channel:
+            return True
+        else:
+            raise ChannelException("I ~~love~~ hate error handling")
 
     async def process_vote(self):
         choice, ctx = await self.queue.get()
@@ -108,6 +113,7 @@ class Vote:
 
     @poll.command()
     @commands.check(is_poll_ongoing)
+    @commands.check(is_poll_channel)
     async def info(self, ctx):
         embed = discord.Embed(title="Current poll")
         embed.add_field(name="Poll name", value=self.pollcfg["name"])
@@ -118,6 +124,7 @@ class Vote:
     @commands.guild_only()
     @commands.command()
     @commands.check(is_poll_ongoing)
+    @commands.check(is_poll_channel)
     async def vote(self, ctx, choice):
         await self.queue.put((choice, ctx)) # tuple -> immutable plus easy get
         await self.process_vote()
@@ -125,6 +132,7 @@ class Vote:
     @commands.guild_only()
     @commands.command()
     @commands.check(is_poll_ongoing)
+    @commands.check(is_poll_channel)
     async def tally(self, ctx):
         await self.queue.join()
         embed = discord.Embed(title="Current tally of votes")
@@ -142,4 +150,7 @@ def setup(bot):
     bot.add_cog(Vote(bot))
     
 class PollException(commands.errors.CommandError):
+    pass
+    
+class ChannelException(commands.errors.CommandError):
     pass
