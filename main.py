@@ -1,4 +1,5 @@
 from discord.ext import commands
+import discord
 import config
 from addons.vote import PollException, ChannelException
 
@@ -20,6 +21,10 @@ for module in modules:
 @bot.event
 async def on_ready():
     bot.guild = bot.get_guild(config.guild)
+    bot.creator_griffing1 = discord.utils.get(bot.guild.members, id=177939404243992578)
+    bot.creator_noirscape = discord.utils.get(bot.guild.members, id=126747960972279808)
+    bot.creator_frozenchen = discord.utils.get(bot.guild.members, id=159824269411352576)
+    bot.creator_architdate = discord.utils.get(bot.guild.members, id=135204578986557440)
     print("Initialized on " + bot.guild.name)
     
 @bot.event
@@ -48,6 +53,12 @@ async def on_error(event, *args, **kwargs):
     if isinstance(args[0], commands.errors.CommandNotFound):
         return
 
+@bot.command()
+async def about(ctx):
+    embed = discord.Embed(title="Written by {}, {}, {}, and {}".format(bot.creator_griffing1, bot.creator_noirscape, bot.creator_frozenchen, bot.creator_architdate))
+    embed.description = "This is a bot written in Python 3.7 and discord.py 1.0.0 for use in votes on Nintendo Homebrew. Source can be found [here](https://github.com/GriffinG1/Mayushii)."
+    embed.set_thumbnail(url="https://i.catgirlsin.space/52/62b643b128796ca5de11d1a4a9a8d3438caca9.png")
+    await ctx.send(embed=embed)
     
 @bot.command()
 async def reload(ctx):
