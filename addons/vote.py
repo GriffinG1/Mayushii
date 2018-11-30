@@ -4,7 +4,8 @@ from discord.ext import commands
 import asyncio
 import os
 import shutil
-from config import channel
+from config import channel, min_time_since_join
+from datetime import datetime
 
 class Vote:
     pollcfg = {}
@@ -35,6 +36,12 @@ class Vote:
             return True
         else:
             raise ChannelException("I ~~love~~ hate error handling")
+            
+    async def is_old_enough(ctx):
+        if (datetime.now() - ctx.author.joined_at).days < min_time_since_join:
+            raise NotOldEnough("Little child")
+        else:
+            return True
 
     async def process_vote(self):
         choice, ctx = await self.queue.get()
@@ -128,6 +135,7 @@ class Vote:
     @commands.command()
     @commands.check(is_poll_ongoing)
     @commands.check(is_poll_channel)
+    @commands.check(is_old_enough)
     async def vote(self, ctx, choice):
         await self.queue.put((choice, ctx)) # tuple -> immutable plus easy get
         await self.process_vote()
@@ -157,4 +165,7 @@ class PollException(commands.errors.CommandError):
     pass
     
 class ChannelException(commands.errors.CommandError):
+    pass
+
+class NotOldEnough(commands.errors.CommandError):
     pass

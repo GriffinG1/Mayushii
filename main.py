@@ -1,7 +1,7 @@
 from discord.ext import commands
 import discord
 import config
-from addons.vote import PollException, ChannelException
+from addons.vote import PollException, ChannelException, NotOldEnough
 
 """A simple bot framework. Based on https://gist.github.com/noirscape/cc8e65c1c42f26af0a9b3780e161817d"""
 
@@ -38,12 +38,21 @@ async def on_command_error(ctx, e):
     elif isinstance(e, ChannelException):
         try:
             await ctx.message.delete()
-        except commands.BotMissingPermissions:
+        except commands.MissingPermissions:
             pass
         try:
             await ctx.author.send("All voting commands must be done in <#{}>".format(config.channel))
         except discord.Forbidden:
             await ctx.send("All voting commands must be done in <#{}>".format(config.channel))
+    elif isinstance(e, NotOldEnough):
+        try:
+            await ctx.message.delete()
+        except commands.MissingPermissions:
+            pass
+        try:
+            await ctx.author.send("You must have been a member of this server for longer than {} days".format(config.min_time_since_join))
+        except discord.Forbidden:
+            await ctx.send("You must have been a member of this server for longer than {} days".format(config.min_time_since_join))
     elif isinstance(e, commands.errors.MissingRequiredArgument):
         formatted_help = await commands.formatter.HelpFormatter().format_help_for(ctx, ctx.command)
         await ctx.send(f"You're missing required arguments.\n{formatted_help[0]}")

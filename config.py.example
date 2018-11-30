@@ -1,3 +1,4 @@
 token = # Set your token here as str
 guild = # Guild ID as int
 channel = # Channel ID as int
+min_time_since_join = # Value in days as int
