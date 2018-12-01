@@ -32,7 +32,7 @@ class Vote:
             raise PollException("This thing is a pain")
             
     async def is_poll_channel(ctx):
-        if ctx.message.channel.id == channel:
+        if ctx.message.channel.id in channel:
             return True
         else:
             raise ChannelException("I ~~love~~ hate error handling")
@@ -44,16 +44,18 @@ class Vote:
             return True
 
     async def process_vote(self):
+        lower = [c.lower() for c in self.pollcfg["options"]]
         choice, ctx = await self.queue.get()
         if choice == "cancel":
             popped = self.vote_list.pop(ctx.author.id, None) # default param means nothing goes wrong if someone cancels again
             if popped is not None:
                 await ctx.send("Your vote has been cancelled!")
-        elif choice not in self.pollcfg["options"]:
+        elif choice.lower() not in lower:
             await ctx.send("This is not a valid voting option.")
         else:
+            choice = self.pollcfg["options"][lower.index(choice.lower())]
             self.vote_list[str(ctx.author.id)] = choice
-            await ctx.send(f"Your vote for {choice} has been succesfully registered!")
+            await ctx.send(f"Your vote for {choice} has been successfully registered!")
         with open("{}.json".format("{}_votes".format(self.pollcfg["name"])), "w") as votefile:
             json.dump(self.vote_list, votefile)
         self.queue.task_done()
