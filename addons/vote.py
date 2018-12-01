@@ -47,7 +47,7 @@ class Vote:
         lower = [c.lower() for c in self.pollcfg["options"]]
         choice, ctx = await self.queue.get()
         if choice == "cancel":
-            popped = self.vote_list.pop(ctx.author.id, None) # default param means nothing goes wrong if someone cancels again
+            popped = self.vote_list.pop(str(ctx.author.id), None) # default param means nothing goes wrong if someone cancels again
             if popped is not None:
                 await ctx.send("Your vote has been cancelled!")
         elif choice.lower() not in lower:
