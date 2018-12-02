@@ -56,6 +56,8 @@ async def on_command_error(ctx, e):
     elif isinstance(e, commands.errors.MissingRequiredArgument):
         formatted_help = await commands.formatter.HelpFormatter().format_help_for(ctx, ctx.command)
         await ctx.send(f"You're missing required arguments.\n{formatted_help[0]}")
+    else:
+        print(e)
 
 @bot.event
 async def on_error(event, *args, **kwargs):

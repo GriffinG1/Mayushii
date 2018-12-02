@@ -10,6 +10,7 @@ from datetime import datetime
 class Vote:
     pollcfg = {}
     vote_list = {}
+    white_list = {}
     poll_ongoing = False
 
     def __init__(self, bot):
@@ -23,6 +24,13 @@ class Vote:
                     if os.path.isfile(vote_name):
                         with open(vote_name, "r") as votefile:
                             self.vote_list = json.load(votefile)
+        if os.path.isfile("whitelist.json"):
+            with open("whitelist.json", "r") as whitefile:
+                self.white_list = json.load(whitefile)
+        else:
+            with open("whitelist.json", "w") as whitefile:
+                self.white_list["whitelist"] = []
+                json.dump(self.white_list, whitefile)
         self.queue = asyncio.Queue()
 
     async def is_poll_ongoing(ctx):
@@ -38,7 +46,7 @@ class Vote:
             raise ChannelException("I ~~love~~ hate error handling")
             
     async def is_old_enough(ctx):
-        if (datetime.now() - ctx.author.joined_at).days < min_time_since_join:
+        if (datetime.now() - ctx.author.joined_at).days < min_time_since_join and ctx.author.id not in ctx.cog.white_list["whitelist"]:
             raise NotOldEnough("Little child")
         else:
             return True
@@ -150,16 +158,38 @@ class Vote:
     async def tally(self, ctx):
         await self.queue.join()
         embed = discord.Embed(title="Current tally of votes")
-
         votes = dict.fromkeys(self.pollcfg["options"], 0)
         for vote in self.vote_list.values():
             if vote in votes:
                 votes[vote] += 1
         for v in votes.items():
             embed.add_field(name=f"{v[0]}", value=f"{v[1]}")
-
         await ctx.send(embed=embed)
-        
+
+    @commands.group()
+    async def whitelist(self, ctx):
+        if ctx.invoked_subcommand is None:
+            await ctx.send("No option provided")
+
+    @whitelist.command()
+    async def add(self, ctx, user : discord.User):
+        if user.id in self.white_list["whitelist"]:
+            return await ctx.send(f"{user.id} is already in the whitelist")
+        self.white_list["whitelist"].append(user.id)
+        with open("whitelist.json", "w") as whitefile:
+            json.dump(self.white_list, whitefile)
+        await ctx.send(f"Added {user.id} to whitelist")
+
+    @whitelist.command()
+    async def remove(self, ctx, user : discord.User):
+        if user.id not in self.white_list["whitelist"]:
+            return await ctx.send(f"{user.id} is not in the whitelist")
+        self.white_list["whitelist"].remove(user.id)
+        with open("whitelist.json", "w") as whitefile:
+            json.dump(self.white_list, whitefile)
+        await ctx.send(f"Remove {user.id} from whitelist")
+
+
 def setup(bot):
     bot.add_cog(Vote(bot))
     
