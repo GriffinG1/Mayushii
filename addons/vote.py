@@ -54,7 +54,7 @@ class Vote:
     async def process_vote(self):
         lower = [c.lower() for c in self.pollcfg["options"]]
         choice, ctx = await self.queue.get()
-        if choice == "cancel":
+        if choice == "cancel" or choice == "clear":
             popped = self.vote_list.pop(str(ctx.author.id), None) # default param means nothing goes wrong if someone cancels again
             if popped is not None:
                 await ctx.send("Your vote has been cancelled!")
@@ -166,28 +166,31 @@ class Vote:
             embed.add_field(name=f"{v[0]}", value=f"{v[1]}")
         await ctx.send(embed=embed)
 
+    @commands.has_permissions(manage_guild=True)
     @commands.group()
     async def whitelist(self, ctx):
         if ctx.invoked_subcommand is None:
-            await ctx.send("No option provided")
+            await ctx.send("No option provided.")
 
     @whitelist.command()
-    async def add(self, ctx, user : discord.User):
+    async def add(self, ctx, user: discord.User):
+        """Adds user to whitelist"""
         if user.id in self.white_list["whitelist"]:
-            return await ctx.send(f"{user.id} is already in the whitelist")
+            return await ctx.send(f"{user.id} is already in the whitelist.")
         self.white_list["whitelist"].append(user.id)
         with open("whitelist.json", "w") as whitefile:
             json.dump(self.white_list, whitefile)
-        await ctx.send(f"Added {user.id} to whitelist")
+        await ctx.send(f"Added {user} to whitelist.")
 
     @whitelist.command()
-    async def remove(self, ctx, user : discord.User):
+    async def remove(self, ctx, user: discord.User):
+        """Removes user to whitelist"""
         if user.id not in self.white_list["whitelist"]:
-            return await ctx.send(f"{user.id} is not in the whitelist")
+            return await ctx.send(f"{user.id} is not in the whitelist.")
         self.white_list["whitelist"].remove(user.id)
         with open("whitelist.json", "w") as whitefile:
             json.dump(self.white_list, whitefile)
-        await ctx.send(f"Remove {user.id} from whitelist")
+        await ctx.send(f"Removed {user} from whitelist.")
 
 
 def setup(bot):
