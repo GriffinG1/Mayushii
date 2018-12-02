@@ -27,10 +27,6 @@ class Vote:
         if os.path.isfile("whitelist.json"):
             with open("whitelist.json", "r") as whitefile:
                 self.white_list = json.load(whitefile)
-        else:
-            with open("whitelist.json", "w") as whitefile:
-                self.white_list["whitelist"] = []
-                json.dump(self.white_list, whitefile)
         self.queue = asyncio.Queue()
 
     async def is_poll_ongoing(ctx):
