@@ -41,30 +41,33 @@ async def on_command_error(ctx, e):
         except commands.MissingPermissions:
             pass
         try:
-            msg = ""
-            for c in config.channel:
-                msg+=f"<#{c}> "
-            await ctx.author.send("All voting commands must be done in {}".format(msg))
+            await ctx.author.send("All voting commands must be done in {}".format(
+                ' or '.join(f"<#{c}>" for c in config.channel)))
         except discord.Forbidden:
-            await ctx.send("All voting commands must be done in {}".format(msg))
+            await ctx.send("All voting commands must be done in {}".format(
+                ' or '.join(f"<#{c}>" for c in config.channel)))
     elif isinstance(e, NotOldEnough):
         try:
             await ctx.message.delete()
         except commands.MissingPermissions:
             pass
         try:
-            await ctx.author.send("You must have been a member of this server for longer than {} days".format(config.min_time_since_join))
+            await ctx.author.send(
+                "You must have been a member of this server for longer than {} days".format(config.min_time_since_join))
         except discord.Forbidden:
-            await ctx.send("You must have been a member of this server for longer than {} days".format(config.min_time_since_join))
+            await ctx.send(
+                "You must have been a member of this server for longer than {} days".format(config.min_time_since_join))
     elif isinstance(e, BlackListed):
         try:
             await ctx.message.delete()
         except commands.MissingPermissions:
             pass
         try:
-            await ctx.author.send("You are blacklisted from voting, if you think there is a mistake please contact staff in <#270890866820775946>")
+            await ctx.author.send(
+                "You are blacklisted from voting, if you think there is a mistake please contact staff in <#270890866820775946>")
         except discord.Forbidden:
-            await ctx.send("You are blacklisted from voting, if you think there is a mistake please contact staff in <#270890866820775946>")
+            await ctx.send(
+                "You are blacklisted from voting, if you think there is a mistake please contact staff in <#270890866820775946>")
     elif isinstance(e, commands.errors.MissingRequiredArgument):
         formatted_help = await commands.formatter.HelpFormatter().format_help_for(ctx, ctx.command)
         await ctx.send(f"You're missing required arguments.\n{formatted_help[0]}")
