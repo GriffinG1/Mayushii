@@ -6,8 +6,10 @@ import os
 import shutil
 from config import channel, min_time_since_join
 from datetime import datetime
+from cogs.exceptions import PollException, ChannelException, NotOldEnough, BlackListed
 
-class Vote:
+
+class Vote(commands.Cog):
     pollcfg = {}
     vote_list = {}
     white_list = []
@@ -60,7 +62,7 @@ class Vote:
         lower = [c.lower() for c in self.pollcfg["options"]]
         choice, ctx = await self.queue.get()
         if choice == "cancel" or choice == "clear":
-            popped = self.vote_list.pop(str(ctx.author.id), None) # default param means nothing goes wrong if someone cancels again
+            popped = self.vote_list.pop(str(ctx.author.id), None)  # default param means nothing goes wrong if someone cancels again
             if popped is not None:
                 await ctx.send("Your vote has been cancelled!")
         elif choice.lower() not in lower:
@@ -78,16 +80,17 @@ class Vote:
     @commands.group()
     async def poll(self, ctx):
         if ctx.invoked_subcommand is None:
-            await ctx.send("I don't know what you want me to do. If you would like to create a poll, please do `$help poll create`. If you would like to close an ongoing poll, please do `$poll close`.")
+            await ctx.send("I don't know what you want me to do. If you would like to create a poll, please do `$help "
+                           "poll create`. If you would like to close an ongoing poll, please do `$poll close`.")
 
     @commands.has_permissions(manage_guild=True)
     @poll.command(alias='start')
     async def create(self, ctx, link, name, *, options):
-        """To create a poll, you must provide the link to the imgur gallery, the name for the current poll, and a list of available options split by vertical bars. Ex:\n$poll create https://imgur.com/testing testingpoll2018 A | B | C | D"""
+        """To create a poll, you must provide the link to the imgur gallery, the name for the current poll,
+        and a list of available options split by vertical bars. Ex:\n$poll create https://imgur.com/testing
+        testingpoll2018 A | B | C | D """
         if self.poll_ongoing:
             return await ctx.send("There's already a poll running. You must stop that one first.")
-        elif not link.startswith("https://"):
-            return await ctx.send(f"Your inputted link, `{link}`, is not a valid link.")
 
         vote_options = []
         for option in options.split(" | "):
@@ -113,7 +116,7 @@ class Vote:
     @poll.command(alias='end')
     async def close(self, ctx):
         await ctx.invoke(self.bot.get_command("tally"))
-        self.poll_ongoing = False # Should be _much_ earlier
+        self.poll_ongoing = False  # Should be _much_ earlier
 
         votes = dict.fromkeys(self.pollcfg["options"], 0)
 
@@ -244,15 +247,3 @@ class Vote:
 
 def setup(bot):
     bot.add_cog(Vote(bot))
-    
-class PollException(commands.errors.CommandError):
-    pass
-    
-class ChannelException(commands.errors.CommandError):
-    pass
-
-class NotOldEnough(commands.errors.CommandError):
-    pass
-
-class BlackListed(commands.errors.CommandError):
-    pass
